@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>orbitcontrol_camera</title>
+    <script src="js/three.js"></script>
+    <script src="js/OrbitControls.js"></script>
+    <script src="js/MTLLoader.js"></script>
+    <script src="js/OBJLoader.js"></script>
+
+    <style type="text/css">
+        div#canvas {
+            border: none;
+            width: 100%;
+            height: 800px;
+            background-color: #EEEEEE;
+        }
+
+    </style>
+    <script type="text/javascript">
+        var scene;
+        function initScene () {
+            scene = new THREE.Scene();
+            //skybox
+//            scene.background = new THREE.CubeTextureLoader()
+//                .setPath( 'sky/' )
+//                .load( [ 'px.png', 'nx.png', 'py.png', 'ny.png', 'pz.png', 'nz.png' ] );
+        }
+
+        var renderer;
+        function initThree () {
+            width = document.getElementById('canvas').clientWidth;
+            height = document.getElementById('canvas').clientHeight;
+            renderer = new THREE.WebGLRenderer( {
+                antialias : true
+            });
+            renderer.setSize(width, height);
+            document.getElementById('canvas').appendChild(renderer.domElement);
+            renderer.setClearColor(0xFFFFFF, 1.0);
+        }
+
+        var camera;
+        function initCamera () {
+            camera = new THREE.PerspectiveCamera(45, width / height, 1, 10000);
+            camera.position.set(1000, 0, 0);
+            camera.lookAt(scene.position);
+        }
+
+        function initLight () {
+            scene.add(new THREE.AmbientLight(0xf03eff));
+        }
+
+        //add extener_obj_data
+        //obj加载是异步的，直接渲染，由于模型没加载完全，无法显示，故需要以animation的方式进行动态渲染
+        var loader;
+        function initLoader () {
+            loader = new THREE.OBJLoader();
+            loader.load('model/2032.obj', function(obj){
+                obj.scale.set(1, 1, 1);
+                obj.position.y = 100;
+                scene.add(obj);
+            });
+        }
+
+        //对三位模型obj加载材质material信息，include：漫射ambient，光泽specular，
+        // RGB，反射specularity，折射refraction，透明度transparency等
+        var loaderMtl;
+        function initMtlloader () {
+            loaderMtl = new THREE.MTLLoader();
+            loaderMtl.setPath('model/');
+            loaderMtl.load('2032.mtl', function(obj1){
+                obj1.preload();
+                var loaderobj = new THREE.OBJLoader();
+                loaderobj.setMaterials(obj1);
+                loaderobj.load('model/2032.obj', function(obj2){
+                    obj2.scale.set(1, 1, 1);
+                    obj2.position.y = -100;
+                    scene.add(obj2);
+                });
+            });
+        }
+
+        function render () {
+            renderer.render(scene, camera);
+        }
+
+        function animation () {
+            render();
+            requestAnimationFrame(animation);
+        }
+
+        function ThreeStart () {
+            initScene(); //set scene
+            initThree(); //set render parameter
+            initLight(); // set light
+            initCamera(); // set camera
+            initLoader();
+            initMtlloader();
+            animation();
+            var controls = new THREE.OrbitControls(camera);  //camera control
+            controls.addEventListener('change', render);
+        }
+
+    </script>
+
+</head>
+<body onload="ThreeStart ()">
+    <div id="canvas"></div>
+</body>
+</html>

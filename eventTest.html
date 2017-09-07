@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style type="text/css">
+    .test {
+	    display: block;
+	}
+	#test1 {    
+	    text-align: center;
+	    width: 100%;
+	    height: 200px;
+	    
+	}
+	span {
+	    position: absolute;
+	    width: 200px;
+	    height: 200px;
+		line-height: 200px;
+		text-align: center;
+		border: 1px solid#000000;
+	}
+</style>
+</head>
+<body>
+    <div class="test">
+	    <div id="test1"><span id="ss">hi</span></div>
+	</div>
+	
+	<script>
+	    document.getElementById("ss").onmouseover = function () {
+		   var _this = this;
+		   ff = setTimeout(function(){
+		   _this.innerHTML = "hello";
+		   console.log(1)}, 200);
+		   
+	
+		};
+		document.getElementById("ss").onmouseout = function () {
+		    clearTimeout(ff);
+            this.innerHTML = "hi"; 		
+		};
+	
+	</script>
+</body>
+</html>

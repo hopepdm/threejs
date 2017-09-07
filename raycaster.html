@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>three.js- camera animation</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <style>
+        body {
+            font-family: Monospace;
+            background-color: #f0f0f0;
+            margin: 0px;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+
+<script src="js/three.js"></script>
+<script src="js/Projector.js"></script>
+<script src="js/CanvasRenderer.js"></script>
+
+<script src="js/OrbitControls.js"></script>
+
+<script src="js/stats.min.js"></script>
+
+
+<script>
+
+    var container, stats;
+    var camera, scene, renderer;
+
+    var raycaster;
+    var mouse;
+
+    init();
+    animate();
+
+    function init() {
+
+        container = document.createElement( 'div' );
+        document.body.appendChild( container );
+
+        camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 1, 10000 );
+        camera.position.set( 0, 0, 700 );
+
+        scene = new THREE.Scene();
+
+        var geometry = new THREE.BoxGeometry( 100, 100, 100 );
+
+
+        var object1 = new THREE.Mesh( geometry, new THREE.MeshBasicMaterial( { color: Math.random() * 0xffffff, opacity: 0.5 } ) );
+        object1.rotateX( 45 );
+        object1.rotateY( 45 );
+
+        scene.add( object1 );
+
+        var axisHelper = new THREE.AxisHelper( 300 );
+        scene.add( axisHelper );
+
+        raycaster = new THREE.Raycaster( 1, 100 );
+        mouse = new THREE.Vector2();
+
+
+        renderer = new THREE.CanvasRenderer();
+        renderer.setClearColor( 0xf0f0f0 );
+        renderer.setPixelRatio( window.devicePixelRatio );
+        renderer.setSize( window.innerWidth, window.innerHeight );
+        container.appendChild( renderer.domElement );
+
+        stats = new Stats();
+        container.appendChild( stats.dom );
+
+        document.addEventListener( 'mousedown', onDocumentMouseDown, false );
+        document.addEventListener( 'touchstart', onDocumentTouchStart, false );
+
+        window.addEventListener( 'resize', onWindowResize, false );
+
+
+    }
+
+    function onWindowResize() {
+
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+
+        renderer.setSize( window.innerWidth, window.innerHeight );
+
+    }
+
+    function onDocumentTouchStart( event ) {
+
+        event.preventDefault();
+
+        event.clientX = event.touches[0].clientX;
+        event.clientY = event.touches[0].clientY;
+        onDocumentMouseDown( event );
+
+    }
+
+    function onDocumentMouseDown( event ) {
+
+        event.preventDefault();
+        var projector = new THREE.Projector();
+
+        mouse.x = ( event.clientX / renderer.domElement.clientWidth ) * 2 - 1;
+        mouse.y = - ( event.clientY / renderer.domElement.clientHeight ) * 2 + 1;
+
+        var mouse3D = new THREE.Vector3( mouse.x, mouse.y, 0.5 );
+        projector.unprojectVector( mouse3D, camera );
+
+        mouse3D.sub( camera.position );       //mouse3D.normalize()获取相机位置与屏幕坐标的方向向量
+
+        var p1 = new THREE.Vector3( 0, 0, 700 );
+
+        var geo = new THREE.ArrowHelper( mouse3D.normalize(), p1, 2000, 0x000000, 0, 0 );
+        scene.add( geo );
+
+        myCameraTween( camera, 2*Math.PI, 360, 360 );
+
+    }
+
+
+    function animate() {
+
+        requestAnimationFrame( animate );
+
+        render();
+        stats.update();
+
+    }
+
+
+
+    function render() {
+        camera.lookAt( scene.position );
+
+        renderer.render( scene, camera );
+
+    }
+
+    //相机动画函数，原作者博客：http://blog.csdn.net/birdflyto206/article/details/52227991
+    function myCameraTween(camera, angle, segs, during) {
+
+        var x = camera.position.x;
+        var y = camera.position.y;
+        var z = camera.position.z;
+
+
+        var endPosArray = new Array();
+
+        var perAngle = angle / segs;
+
+        //预先保存相机运动路径
+        for (var i = 1 ; i <= segs ; i++) {
+            var endPos = {
+                "x": z * Math.sin(i * perAngle) + x * Math.cos(i * perAngle),
+                "y": y,
+                "z": z * Math.cos(i * perAngle) - x * Math.sin(i * perAngle)
+            };
+
+            endPosArray.push(endPos);
+        }
+
+
+        var flag = 0;
+        var id = setInterval( function () {
+            if ( flag == segs ) {
+                clearInterval(id);
+                flag = 0;
+
+            } else {
+                camera.position.x = endPosArray[flag].x;
+                camera.position.y = endPosArray[flag].y;
+                camera.position.z = endPosArray[flag].z;
+
+                flag++;
+            }
+
+        }, during / segs );
+
+    }
+
+</script>
+
+</body>
+</html>
+
